@@ -1,27 +1,16 @@
-//import tester_staff.AVLNode;
-
-//----------------------------ORIGINALO-----------------------------------
-//----------------ORIGINAL FILE-----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /**
- *
- * AVLTree
- *
+ * ---AVLTree---
  * An implementation of a AVL Tree with
  * distinct integer keys and info
- *
- *
- */
-/**
  * 
- * %%% things 2Check before handing out: 
- * - do we need to do imports ?
- * - getRoot need to return AVLNode or IAVLNode?
+ *@author Matan Ben Tov & Shir Frenkel
+ *@version Final-1
  */
-//Modified by Shir 11.4 17:00
 
 public class AVLTree {
 
 	private AVLNode root, min, max;
+
 
 	/**
 	 * --CONSTRUCTOR--
@@ -82,7 +71,7 @@ public class AVLTree {
 	 * Complexity - O(1)
 	 * @return the root AVL node, or null if the tree is empty
 	 */
-	public AVLNode getRoot() 
+	public IAVLNode getRoot() 
 	{
 		return this.root;
 	}
@@ -201,11 +190,10 @@ public class AVLTree {
 
 					if (right_child.getBF() <= 0) { // RR Case
 						curr_parent = rotateLeft(curr_parent);
-						// System.out.println("L");//!!! debug stuff
+
 					} else if (right_child.getBF() > 0) { // RL Case
-						rotateRight(right_child); // !!!! no need to keep the child?
+						rotateRight(right_child); // 
 						curr_parent = rotateLeft(curr_parent);
-						// System.out.println("R>L");//!!! debug stuff
 						rotation_cou++;
 					}
 				}
@@ -215,20 +203,17 @@ public class AVLTree {
 
 					if (left_child.getBF() >= 0) { // LL Case
 						curr_parent = rotateRight(curr_parent);
-						// System.out.println("R"); //!!! debug stuff
+
 					} else if (left_child.getBF() < 0) { // LR Case
 						rotateLeft(left_child);
 						curr_parent = rotateRight(curr_parent);
-						// System.out.println("L>R"); //!!! debug stuff
 						rotation_cou++;
 					}
 				}
 				rotation_cou++; // in any case one rotation was done
-			} // end of criminal cases
+			} 
+			// end of criminal cases
 
-			if (Math.abs(curr_parent.getBF()) > 2) {// !!! debug stuff
-				System.out.println("ERROR :(");
-			}
 
 			// go up the path:
 			curr_parent = (AVLNode) curr_parent.getParent();
@@ -245,7 +230,7 @@ public class AVLTree {
 	 * @post this.tree was rotated left by given node
 	 * @return substitute of the given node, after being rotated
 	 */
-	public AVLNode rotateLeft(AVLNode node) // will return the new parent
+	private AVLNode rotateLeft(AVLNode node) // will return the new parent
 	{// edge case updates root
 		AVLNode new_parent = (AVLNode) node.getRight();
 
@@ -274,7 +259,7 @@ public class AVLTree {
 
 		// rotation - part 2 of 2:
 		new_parent.setLeft(node);
-
+		
 		return new_parent;
 	}
 
@@ -286,7 +271,7 @@ public class AVLTree {
 	 * @post this.tree was rotated left by given node
 	 * @return substitute of the given node, after being rotated
 	 */
-	public AVLNode rotateRight(AVLNode node) {
+	private AVLNode rotateRight(AVLNode node) {
 		AVLNode new_parent = (AVLNode) node.getLeft();
 
 		// rotation - part 1 of 2:
@@ -317,22 +302,15 @@ public class AVLTree {
 	}
 
 	/**
-	 * --DELETE--
+	 * --DELETE NODE--
 	 * Complexity - O(logn)
-	 * @param k == key of the node that need to be deleted
-	 * if k in the tree: @post delete the specified node, @return number of
-	 * rotations done otherwise, @return -1
+	 * @pre nodeToDel != null
+	 * @param nodeToDel := the node that need to be deleted
+	 * @post delete nodeToDel, @return number of rotations done
 	 * 
 	 */
-	public int delete(int k) {
-		AVLNode deleteNode = this.findByKey(k);
-		if (deleteNode == null) {
-			return -1;
-		}
-		if (deleteNode.getKey() != k) { // k is not in this tree
-			return -1;
-		}
-
+	public int deleteNode(AVLNode deleteNode) {
+		
 		// update min or max if needed
 		if (deleteNode == this.max) {
 			this.max = (AVLNode) this.getPredecessor(this.max); // works for root too
@@ -353,16 +331,73 @@ public class AVLTree {
 
 		// option 3 - deleteNode has two children --> deleteNode has to have a successor
 		AVLNode del_succes = this.getSuccessor(deleteNode); // del_succes:= deleteNode's successor
-		deleteNode.setItem(del_succes.getItem()); // edge case: deleteNode is root, this.root don't need to change
-		// need to delete del_succes, it can have only one child
+		
+		// delete del_succes from the tree and than replace deleteNode with del_succes
+		// del_succes can have 1 child / 0 child
+		// no need to check if del_succes is min/max because it is deleted temporarily!
+		int rotationCount = -2;  // rotation counter (tmp value)
+		// option 1 - del_succes is leaf
 		if (del_succes.isLeaf()) {
-			return deleteLeaf(del_succes);
+			rotationCount = this.deleteLeaf(del_succes);
 		}
+
+		// option 2 - del_succes has one child
 		if (del_succes.hasOneChild()) {
-			return deleteNodeOneChild(del_succes);
+			rotationCount = this.deleteNodeOneChild(del_succes);
 		}
-		System.out.println("here and shouldnt"); // !!debug
-		return -42; // shouldn't get here
+		
+		// replace deleteNode by del_succes:
+		
+		if(deleteNode == this.root) {
+			this.root = del_succes;
+		}
+		
+		// set deleteNode's right son as del_succes's right son
+		del_succes.setRight(deleteNode.getRight());  // del_succes's size, height updates
+		if(del_succes.getRight() != null) {
+			del_succes.getRight().setParent(del_succes);
+		}
+		
+		// set deleteNode's left son as del_succes's left son
+		del_succes.setLeft(deleteNode.getLeft());  // del_succes's size, height updates
+		if(del_succes.getLeft() != null) {
+			del_succes.getLeft().setParent(del_succes);
+		}
+		
+		if(deleteNode.getParent() != null) {
+			// set deleteNode's parent as del_succes parent instead
+			boolean side = ((AVLNode) deleteNode.getParent()).getSideOf(deleteNode);  
+			((AVLNode) deleteNode.getParent()).setSide(side, del_succes);
+			del_succes.setParent(deleteNode.getParent());
+		}
+		
+		// disconnect deleteNode
+		deleteNode.setParent(null);
+		deleteNode.setLeft(null);
+		deleteNode.setRight(null);
+		
+		return rotationCount;  
+		
+	}
+	
+	/**
+	 * --DELETE--
+	 * Complexity - O(logn)
+	 * @param k == key of the node that need to be deleted
+	 * if k in the tree: @post delete the specified node, @return number of
+	 * rotations done otherwise, @return -1
+	 * 
+	 */
+	public int delete(int k) {
+		AVLNode deleteNode = this.findByKey(k);
+		if (deleteNode == null) {
+			return -1;
+		}
+		if (deleteNode.getKey() != k) { // k is not in this tree
+			return -1;
+		}
+
+		return this.deleteNode(deleteNode);
 
 	}
 
@@ -568,6 +603,128 @@ public class AVLTree {
 		return res;
 	}
 
+	
+	/**
+	 * --SELECT--
+	 * O(log n)
+	 * @param k - rank to be looked for
+	 * @pre 1 <= k <= size (=max-rank)!
+	 * @pre tree is not empty (if it is empty, the input is invalid)
+	 * @return node ranked with k
+	 */
+	public AVLNode selectNodeByRank(int k)
+	{
+		if (k == 1) {// rank 1 is minimun
+			return this.min;
+		}
+		if (k == this.size()) {// rank size is maximum
+			return this.max;
+		}
+		
+		AVLNode node=this.root;
+		while(node!=null)
+		{
+			int curr_rank = node.getSubtreeRank();
+			if (k == curr_rank) {
+				return node;
+			}
+			
+			if (k < curr_rank) {
+				node = (AVLNode) node.getLeft();
+			}
+			
+			else {// k > curr_rank
+				node = (AVLNode) node.getRight();
+				k = k - curr_rank;
+			}
+		}
+		System.out.println("erorrrrrr");
+		return null; //shouldn't be here if input is valid
+	}
+	
+	/**
+	 * --SELECT ITEM--
+	 *SAME as selectNode, returns *ITEM* instead of node
+	 */
+	public Item selectItemByRank(int k)
+	{
+		AVLNode selected=selectNodeByRank(k);
+		if(selected==null)
+			return null;//shouldnt be here
+		return selected.getItem();
+	}
+	
+	
+	/**
+	 *--INSERT BY INDEX--
+	 * !WARNING! this function is not maintaining keys order, designed for implementing TreeList insert
+	 *@param i := index to insert new item (index = rank - 1)
+	 *@param k := key of the new item
+	 *@param s := info of new item
+	 *if 0 <= i <= this.size() @return 0 & insert new item(k,s) in i'th position, otherwise @return -1
+	 */
+	public int insertByIndex(int i, int k, String s) {
+		if(i < 0 || this.size() < i ) { 
+			return -1;
+		}
+		AVLNode newNode = new AVLNode(k, s);  // the node we need to insert to the tree in the i'th position
+		
+		if(this.empty()) {
+			this.root = newNode;
+			this.max = newNode;
+			this.min = newNode;
+			return 0;
+		}
+		
+		AVLNode parent ;  // future parent of newNode
+		boolean side;  // the side of the parent to connect newNode (right := true, left := false)
+		
+		// tree is not empty --> this.max, this.min != null
+		if(i == this.size()) {
+			parent = this.max;
+			side = true;  // right
+			this.max = newNode;
+		}
+		else {
+			if(i == 0) {
+				parent = this.min;
+				side = false;  // left
+				this.min = newNode;
+			}
+			else {
+				AVLNode curr_i = selectNodeByRank(i+1);  // the current node in the tree in index i
+				if(curr_i.getLeft() == null) {
+					parent = curr_i;
+					side = false;  // left
+				}
+				else {
+					parent = this.getPredecessor(curr_i);
+					side = true;  // right
+				}
+			}
+		}
+
+		// connect the new node to the parent & fix the tree
+		this.connect(parent, side, newNode);
+		this.rebalanceUpwards(parent);
+		//this.rebalanceUpwards(parent);
+		return 0;
+		
+	}
+	
+	/**
+	 * --DELETE BY INDEX--
+	 * !WARNING! this function is not maintaining keys order, designed for implementing TreeList delete
+	 * @param i index @pre 0 <= i < this.size()  --> this.empty = false
+	 * @post delete the i'th item
+	 */
+	public void deleteByIndex(int i) {
+		AVLNode nodeToDel = selectNodeByRank(i+1);  // the node in the i'th position
+		this.deleteNode(nodeToDel);
+	}
+	
+	
+	
 	/**
 	 * --AVLNode INTERFACE-- ! Do not delete or modify this - otherwise all tests
 	 * will fail !
@@ -757,7 +914,7 @@ public class AVLTree {
 		 * @return heights array: heights[0] == left height, heights[1] == right height
 		 * @defines empty tree height==-1
 		 */
-		public int[] getChildrenHeights() {  // %%% change to private before handing, right now we use it in Tester.java
+		private int[] getChildrenHeights() { 
 			int[] heights = new int[2];
 			if (this.left != null) {
 				heights[0] = this.left.getHeight();
@@ -778,7 +935,7 @@ public class AVLTree {
 		 * @return sizes array: sizes[0] == left size, sizes[1] == right size
 		 * @defines empty tree size == 0
 		 */
-		public int[] getChildrenSizes() {  // !!! %%% change to private before handing, right now we use it in Tester.java
+		private int[] getChildrenSizes() {
 			int[] sizes = new int[2];
 			if (this.left != null) {
 				sizes[0] = ((AVLNode) this.left).size;
@@ -808,6 +965,16 @@ public class AVLTree {
 		public int getSize() {
 			return this.size;
 		}
+		
+		 /**
+		  *  --GET-SUBTREE-RANK--
+		 * Complexity - O(1)
+		 */
+		public int getSubtreeRank() {
+			return this.getChildrenSizes()[0] + 1;
+		}
+		 
+		/**
 
 		/**
 		 * --SetSide--
