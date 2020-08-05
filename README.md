@@ -1,3 +1,3 @@
-# DataStructure_proj1
+# DataStructures_Project1
 
 this is a change that has made
