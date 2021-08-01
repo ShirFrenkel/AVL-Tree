@@ -10,3 +10,4 @@ Written in Java, as part of a project in Data-Structures course, TAU.
 * **AVLTree.java:** an implementation of the ADT dictionary with AVL Tree.
 * **CircularList.java:** an implementation of the ADT list implemented with a circular-array of size `maxLen`.
 * **TreeList.java:** an implementation of the ADT list with AVL Tree.
+
